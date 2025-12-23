@@ -5,7 +5,7 @@ from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_sc
 import mlflow
 import mlflow.sklearn
 
-df = pd.read_csv("C:/Users/Anggita Pradnya Dewi/Eksperimen/preprocessing/telco_churn_preprocessing/telco_churn_clean.csv")
+df = pd.read_csv("telco_churn_preprocessing/telco_churn_clean.csv")
 
 X = df.drop(columns=['Churn'])
 y = df['Churn']
@@ -14,24 +14,26 @@ X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=42, stratify=y
 )
 
+mlflow.set_experiment("Telco_Churn_RF")
+
 mlflow.sklearn.autolog()
 
 model = RandomForestClassifier(
-    n_estimators=200,         
-    max_depth=10,             
-    min_samples_split=10,     
-    min_samples_leaf=5,       
-    max_features='sqrt',      
-    class_weight='balanced',  
+    n_estimators=200,
+    max_depth=10,
+    min_samples_split=10,
+    min_samples_leaf=5,
+    max_features='sqrt',
+    class_weight='balanced',
     random_state=42,
     n_jobs=-1
 )
 
-with mlflow.start_run(run_name="RandomForest_Manual_Balanced"):
+with mlflow.start_run(run_name="RF_Balanced_200trees"):
     model.fit(X_train, y_train)
 
     y_pred = model.predict(X_test)
-    y_proba = model.predict_proba(X_test)[:,1]  
+    y_proba = model.predict_proba(X_test)[:, 1]
 
     acc = accuracy_score(y_test, y_pred)
     f1 = f1_score(y_test, y_pred)

@@ -1,10 +1,11 @@
 import pandas as pd
+import numpy as np
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, roc_auc_score
 import mlflow
 import mlflow.sklearn
-import numpy as np
+
 
 df = pd.read_csv("telco_churn_preprocessing/telco_churn_clean.csv")
 
@@ -15,6 +16,7 @@ X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=42, stratify=y
 )
 
+mlflow.set_experiment("Telco_Churn_RF")
 rf = RandomForestClassifier(random_state=42)
 
 param_grid = {
@@ -28,7 +30,8 @@ param_grid = {
 
 grid = GridSearchCV(rf, param_grid, cv=3, scoring='f1', n_jobs=-1)
 
-with mlflow.start_run(run_name="RandomForest_Skilled_Optimized"):
+
+with mlflow.start_run(run_name="RandomForest_Skilled_Optimized") as run:
     grid.fit(X_train, y_train)
     best_model = grid.best_estimator_
 
@@ -52,7 +55,9 @@ with mlflow.start_run(run_name="RandomForest_Skilled_Optimized"):
     rec = recall_score(y_test, y_pred)
     roc_auc = roc_auc_score(y_test, y_proba)
 
-    mlflow.log_params(grid.best_params_)
+    for k, v in grid.best_params_.items():
+        mlflow.log_param(k, str(v))
+
     mlflow.log_metric("accuracy", acc)
     mlflow.log_metric("f1_score", f1)
     mlflow.log_metric("precision", prec)
@@ -71,3 +76,4 @@ with mlflow.start_run(run_name="RandomForest_Skilled_Optimized"):
     print(f"Precision: {prec:.4f}")
     print(f"Recall: {rec:.4f}")
     print(f"ROC AUC: {roc_auc:.4f}")
+    print(f"Run ID: {run.info.run_id}")
